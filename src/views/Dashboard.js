@@ -16,7 +16,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
+import React, {useState, useEffect} from "react";
 // react plugin used to create charts
 import { Line, Pie } from "react-chartjs-2";
 // reactstrap components
@@ -35,38 +35,56 @@ import {
   dashboardEmailStatisticsChart,
   dashboardNASDAQChart,
 } from "variables/charts.js";
+import * as XLSX from "xlsx";
+
+function formatRate(rate) {
+  const rounded = Math.round(rate * 100) / 100;
+  return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(2).replace(/\.?0+$/, '');
+}
 
 function Dashboard() {
+const [schoolCount, setSchoolCount] = useState(null);
+const [schoolCountGrowthRate, setSchoolCountGrowthRate] = useState(null);
+
+useEffect(() => {
+  async function fetchSchoolStats() {
+    const response = await fetch('/report.xlsx');
+    const buffer = await response.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    const semesters = [...new Set(data.map(row => row['학기']))].sort();
+    const latest = semesters[semesters.length - 1];
+    const prev = semesters.length >= 2 ? semesters[semesters.length - 2] : null;
+
+    const filteredLatest = data.filter(row => row['학기'] === latest);
+    const latestSchools = new Set(filteredLatest.map(row => row['학교']));
+
+    setSchoolCount(latestSchools.size);
+
+    if (prev) {
+      const filteredPrev = data.filter(row => row['학기'] === prev);
+      const prevSchools = new Set(filteredPrev.map(row => row['학교']));
+
+      const increase = latestSchools.size - prevSchools.size;
+      const rate = prevSchools.size > 0
+        ? ((increase / prevSchools.size) * 100).toFixed(1)
+        : '∞';
+
+      setSchoolCountGrowthRate(rate);
+    } else {
+      setSchoolCountGrowthRate('N/A');
+    }
+  }
+
+  fetchSchoolStats();
+}, []);
+
   return (
     <>
       <div className="content">
         <Row>
-          <Col lg="3" md="6" sm="6">
-            <Card className="card-stats">
-              <CardBody>
-                <Row>
-                  <Col md="4" xs="5">
-                    <div className="icon-big text-center icon-warning">
-                      <i className="nc-icon nc-globe text-warning" />
-                    </div>
-                  </Col>
-                  <Col md="8" xs="7">
-                    <div className="numbers">
-                      <p className="card-category">Capacity</p>
-                      <CardTitle tag="p">150GB</CardTitle>
-                      <p />
-                    </div>
-                  </Col>
-                </Row>
-              </CardBody>
-              <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fas fa-sync-alt" /> Update Now
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
           <Col lg="3" md="6" sm="6">
             <Card className="card-stats">
               <CardBody>
@@ -78,8 +96,8 @@ function Dashboard() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                      <p className="card-category">Revenue</p>
-                      <CardTitle tag="p">$ 1,345</CardTitle>
+                      <p className="card-category">총 매출</p>
+                      <CardTitle tag="p">50,000,000원</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -87,8 +105,34 @@ function Dashboard() {
               </CardBody>
               <CardFooter>
                 <hr />
-                <div className="stats">
-                  <i className="far fa-calendar" /> Last day
+                <div className="stats" style={{ textAlign: 'center' }}>
+                  전 학기 대비 <strong>50%</strong> 성장
+                </div>
+              </CardFooter>
+            </Card>
+          </Col>
+          <Col lg="3" md="6" sm="6">
+            <Card className="card-stats">
+              <CardBody>
+                <Row>
+                  <Col md="4" xs="5">
+                    <div className="icon-big text-center icon-warning">
+                      <i className="nc-icon nc-bank text-info" />
+                    </div>
+                  </Col>
+                  <Col md="8" xs="7">
+                    <div className="numbers">
+                      <p className="card-category">로컬트립가이드 참여 학교 수</p>
+                      <CardTitle tag="p">{schoolCount}곳</CardTitle>
+                      <p />
+                    </div>
+                  </Col>
+                </Row>
+              </CardBody>
+              <CardFooter>
+                <hr />
+                <div className="stats" style={{ textAlign: 'center' }}>
+                  전 학기 대비 <strong>{formatRate(schoolCountGrowthRate)}%</strong> 증가
                 </div>
               </CardFooter>
             </Card>
@@ -113,8 +157,8 @@ function Dashboard() {
               </CardBody>
               <CardFooter>
                 <hr />
-                <div className="stats">
-                  <i className="far fa-clock" /> In the last hour
+                <div className="stats" style={{ textAlign: 'center' }}>
+                  전 학기 대비 <strong>50%</strong> 증가
                 </div>
               </CardFooter>
             </Card>
@@ -125,13 +169,13 @@ function Dashboard() {
                 <Row>
                   <Col md="4" xs="5">
                     <div className="icon-big text-center icon-warning">
-                      <i className="nc-icon nc-favourite-28 text-primary" />
+                      <i className="nc-icon nc-favourite-28 text-danger" />
                     </div>
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                      <p className="card-category">Followers</p>
-                      <CardTitle tag="p">+45K</CardTitle>
+                      <p className="card-category">인스타 팔로워</p>
+                      <CardTitle tag="p">456</CardTitle>
                       <p />
                     </div>
                   </Col>
@@ -139,86 +183,8 @@ function Dashboard() {
               </CardBody>
               <CardFooter>
                 <hr />
-                <div className="stats">
-                  <i className="fas fa-sync-alt" /> Update now
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-        </Row>
-        <Row>
-          <Col md="12">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h5">Users Behavior</CardTitle>
-                <p className="card-category">24 Hours performance</p>
-              </CardHeader>
-              <CardBody>
-                <Line
-                  data={dashboard24HoursPerformanceChart.data}
-                  options={dashboard24HoursPerformanceChart.options}
-                  width={400}
-                  height={100}
-                />
-              </CardBody>
-              <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-history" /> Updated 3 minutes ago
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-        </Row>
-        <Row>
-          <Col md="4">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h5">Email Statistics</CardTitle>
-                <p className="card-category">Last Campaign Performance</p>
-              </CardHeader>
-              <CardBody style={{ height: "266px" }}>
-                <Pie
-                  data={dashboardEmailStatisticsChart.data}
-                  options={dashboardEmailStatisticsChart.options}
-                />
-              </CardBody>
-              <CardFooter>
-                <div className="legend">
-                  <i className="fa fa-circle text-primary" /> Opened{" "}
-                  <i className="fa fa-circle text-warning" /> Read{" "}
-                  <i className="fa fa-circle text-danger" /> Deleted{" "}
-                  <i className="fa fa-circle text-gray" /> Unopened
-                </div>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-calendar" /> Number of emails sent
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-          <Col md="8">
-            <Card className="card-chart">
-              <CardHeader>
-                <CardTitle tag="h5">NASDAQ: AAPL</CardTitle>
-                <p className="card-category">Line Chart with Points</p>
-              </CardHeader>
-              <CardBody>
-                <Line
-                  data={dashboardNASDAQChart.data}
-                  options={dashboardNASDAQChart.options}
-                  width={400}
-                  height={100}
-                />
-              </CardBody>
-              <CardFooter>
-                <div className="chart-legend">
-                  <i className="fa fa-circle text-info" /> Tesla Model S{" "}
-                  <i className="fa fa-circle text-warning" /> BMW 5 Series
-                </div>
-                <hr />
-                <div className="card-stats">
-                  <i className="fa fa-check" /> Data information certified
+                <div className="stats" style={{ textAlign: 'center' }}>
+                  전 학기 대비 <strong>1,200명</strong> 증가
                 </div>
               </CardFooter>
             </Card>

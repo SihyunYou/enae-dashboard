@@ -17,6 +17,7 @@
 
 */
 import Dashboard from "views/Dashboard.js";
+import LocalTripGuide from "views/LocalTripGuide.js";
 import Notifications from "views/Notifications.js";
 import Icons from "views/Icons.js";
 import Typography from "views/Typography.js";
@@ -30,49 +31,56 @@ var routes = [
     path: "/dashboard",
     name: "Dashboard",
     icon: "nc-icon nc-bank",
-    component: <Dashboard />,
+    component: Dashboard,
+    layout: "/admin",
+  },
+  {
+    path: "/localtripguide",
+    name: "Local Trip Guide",
+    icon: "nc-icon nc-bus-front-12",
+    component: LocalTripGuide,
     layout: "/admin",
   },
   {
     path: "/icons",
     name: "Icons",
     icon: "nc-icon nc-diamond",
-    component: <Icons />,
+    component: Icons,
     layout: "/admin",
   },
   {
     path: "/maps",
     name: "Maps",
     icon: "nc-icon nc-pin-3",
-    component: <Maps />,
+    component: Maps,
     layout: "/admin",
   },
   {
     path: "/notifications",
     name: "Notifications",
     icon: "nc-icon nc-bell-55",
-    component: <Notifications />,
+    component: Notifications,
     layout: "/admin",
   },
   {
     path: "/user-page",
     name: "User Profile",
     icon: "nc-icon nc-single-02",
-    component: <UserPage />,
+    component: UserPage,
     layout: "/admin",
   },
   {
     path: "/tables",
     name: "Table List",
     icon: "nc-icon nc-tile-56",
-    component: <TableList />,
+    component: TableList,
     layout: "/admin",
   },
   {
     path: "/typography",
     name: "Typography",
     icon: "nc-icon nc-caps-small",
-    component: <Typography />,
+    component: Typography,
     layout: "/admin",
   },
   {
@@ -80,7 +88,7 @@ var routes = [
     path: "/upgrade",
     name: "Upgrade to PRO",
     icon: "nc-icon nc-spaceship",
-    component: <UpgradeToPro />,
+    component: UpgradeToPro,
     layout: "/admin",
   },
 ];
